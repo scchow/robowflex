@@ -130,7 +130,10 @@ bool MotionRequestBuilder::setConfig(const std::string &requested_config)
     }
 
     if (matches.empty())
+    {
+        RBX_INFO("Could not find matching config for `%s`, setConfig failed", requested_config);
         return false;
+    }
 
     const auto &found =
         std::min_element(matches.begin(), matches.end(),
