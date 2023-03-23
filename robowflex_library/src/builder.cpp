@@ -131,7 +131,15 @@ bool MotionRequestBuilder::setConfig(const std::string &requested_config)
 
     if (matches.empty())
     {
-        RBX_INFO("Could not find matching config for `%s`, setConfig failed", requested_config);
+        RBX_WARN("Could not find matching config for `%s`, setConfig failed", requested_config);
+        std::string valid_planners = "";
+        for (const auto &config : configs){
+            if (valid_planners.length() != 0){
+                valid_planners.append(", ");
+            }
+            valid_planners.append(config);
+        }
+        RBX_WARN("Valid Planners include: %s", valid_planners);
         return false;
     }
 
