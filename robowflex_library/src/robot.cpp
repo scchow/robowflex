@@ -387,7 +387,12 @@ bool Robot::loadKinematics(const std::string &group_name, bool load_subgroups)
             std::find(groups.begin(), groups.end(), name) == groups.end())
         {
             RBX_ERROR("No JMG or Kinematics defined for `%s`!", name);
-            return false;
+            // return false;
+            // Instead of returning false, we continue to process additional
+            // joing groups. This is because while we don't have a 
+            // kinematics plugin for the base, we do have one for the 
+            // base and arm, so we should not stop here.
+            continue;
         }
 
         robot_model::JointModelGroup *jmg = model_->getJointModelGroup(name);
@@ -998,9 +1003,14 @@ robot_model::RobotStatePtr Robot::allocState() const
 std::vector<std::string> Robot::getSolverTipFrames(const std::string &group) const
 {
     const auto &jmg = model_->getJointModelGroup(group);
+    RBX_INFO("Getting tip frame for group %s", jmg->getName());
     const auto &solver = jmg->getSolverInstance();
     if (solver)
         return solver->getTipFrames();
+    else
+    {
+        RBX_WARN("Unable to get tip frame because unable to find solver instance");
+    }
 
     return {};
 }
@@ -1008,10 +1018,16 @@ std::vector<std::string> Robot::getSolverTipFrames(const std::string &group) con
 std::string Robot::getSolverBaseFrame(const std::string &group) const
 {
     const auto &jmg = model_->getJointModelGroup(group);
+    RBX_INFO("Getting base frame for group %s", jmg->getName());
     const auto &solver = jmg->getSolverInstance();
     if (solver)
+    {
         return solver->getBaseFrame();
-
+    }
+    else
+    {
+        RBX_WARN("Unable to get base frame because unable to find solver instance");
+    }
     return "";
 }
 
