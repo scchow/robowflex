@@ -140,14 +140,16 @@ namespace robowflex
              *  \param[in] y The y coordinate of the sphere.
              *  \param[in] z The z coordinate of the sphere.
              *  \param[in] name Name of marker.
+             *  \param[in] scale The size of the marker
              */
-            void addMarker(double x, double y, double z, const std::string &name = "");
+            void addMarker(double x, double y, double z, const std::string &name = "", double scale = 0.05);
 
             /** \brief Add a point (spherical) marker to the scene.
              *  \param[in] point The x,y,z coordinates as a vector
              *  \param[in] name Name of marker.
+             *  \param[in] scale The size of the marker
              */
-            void addMarker(const Eigen::Vector3d &point, const std::string &name = "");
+            void addMarker(const Eigen::Vector3d &point, const std::string &name = "", double scale = 0.05);
 
             /** \brief Add a transform marker to the managed list of markers.
              * Displayed after an updateMarkers() call.
