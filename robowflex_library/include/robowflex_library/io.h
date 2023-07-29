@@ -39,7 +39,7 @@ namespace robowflex
 
         /** \brief Resolves `package://` URLs and relative file paths to their canonical form.
          *  \param[in] path Path to resolve.
-         *  \return The canonical path, or "" on failure.
+         *  \return The canonical path, or "" on failure if check_exists is true and the path does not exist.
          */
         std::string resolvePath(const std::string &path);
 
@@ -87,10 +87,16 @@ namespace robowflex
          */
         std::pair<bool, YAML::Node> loadFileToYAML(const std::string &path);
 
+        /** \brief Loads a string to a YAML node.
+         *  \param[in] yaml_str String to load.
+         *  \return A pair, where the first is true on success false on failure, and second is the YAML node.
+         */
+        std::pair<bool, YAML::Node> loadStringToYAML(const std::string &str);
+
         /** \brief Loads a file with multiple documents to a vector of YAML nodes.
          *  \param[in] path File to load.
-         *  \return A pair, where the first is true on success false on failure, and second is the vector of
-         * YAML nodes.
+         *  \return A pair, where the first is true on success false on failure, and second is the vector
+         * of YAML nodes.
          */
         std::pair<bool, std::vector<YAML::Node>> loadAllFromFileToYAML(const std::string &path);
 
@@ -191,6 +197,22 @@ namespace robowflex
         bool YAMLFileToMessage(T &msg, const std::string &file)
         {
             const auto &result = IO::loadFileToYAML(file);
+            if (result.first)
+                msg = result.second.as<T>();
+
+            return result.first;
+        }
+
+        /** \brief Load a message (or YAML convertable object) from a string.
+         *  \param[out] msg Message to load into.
+         *  \param[in] str String to load message from.
+         *  \tparam T Type of the message.
+         *  \return True on success, false on failure.
+         */
+        template <typename T>
+        bool YAMLStringToMessage(T &msg, const std::string &str)
+        {
+            const auto &result = IO::loadStringToYAML(str);
             if (result.first)
                 msg = result.second.as<T>();
 

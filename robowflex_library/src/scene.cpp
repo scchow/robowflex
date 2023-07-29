@@ -608,6 +608,28 @@ bool Scene::fromYAMLFile(const std::string &file)
     return true;
 }
 
+bool Scene::fromYAMLString(const std::string &str)
+{
+    moveit_msgs::PlanningScene msg;
+    if (!IO::fromYAMLString(msg, str))
+        return false;
+
+    fixCollisionObjectFrame(msg);
+
+    // Add robot_state if loaded scene does not contain one.
+    if (msg.robot_state.joint_state.position.empty())
+        moveit::core::robotStateToRobotStateMsg(scene_->getCurrentState(), msg.robot_state);
+
+    auto acm(getACM());
+    useMessage(msg);
+
+    // Update ACM only if anything specified.
+    if (msg.allowed_collision_matrix.entry_names.empty())
+        getACM() = acm;
+
+    return true;
+}
+
 bool Scene::fromOpenRAVEXMLFile(const std::string &file, std::string models_dir)
 {
     if (models_dir.empty())

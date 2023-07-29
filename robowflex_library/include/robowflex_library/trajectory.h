@@ -88,6 +88,13 @@ namespace robowflex
          */
         bool fromYAMLFile(const robot_state::RobotState &reference_state, const std::string &filename);
 
+        /** \brief Load a trajectory from a YAML string.
+         *  \param[in] reference_state A full state that contains the values for all the joints.
+         *  \param[in] str Trajectory string.
+         *  \return True on success.
+         */
+        bool fromYAMLString(const robot_state::RobotState &reference_state, const std::string &str);
+
         /** \} */
 
         /** \name Getters and Setters

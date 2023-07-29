@@ -333,6 +333,13 @@ namespace robowflex
          *  \return True on success, false on failure.
          */
         bool fromYAMLFile(const std::string &file);
+
+        /** \brief Load a planning scene from a YAML string.
+         *  \param[in] str String to load planning scene from.
+         *  \return True on success, false on failure.
+         */
+        bool fromYAMLString(const std::string &str);
+
         bool fromOpenRAVEXMLFile(const std::string &file, std::string models_dir = "");
 
         /** \} */

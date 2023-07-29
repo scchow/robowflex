@@ -133,8 +133,10 @@ bool MotionRequestBuilder::setConfig(const std::string &requested_config)
     {
         RBX_WARN("Could not find matching config for `%s`, setConfig failed", requested_config);
         std::string valid_planners = "";
-        for (const auto &config : configs){
-            if (valid_planners.length() != 0){
+        for (const auto &config : configs)
+        {
+            if (valid_planners.length() != 0)
+            {
                 valid_planners.append(", ");
             }
             valid_planners.append(config);
@@ -561,6 +563,15 @@ bool MotionRequestBuilder::fromYAMLFile(const std::string &file)
     incrementVersion();
 
     bool success = IO::fromYAMLFile(request_, file);
+    setPlanningGroup(request_.group_name);
+    return success;
+}
+
+bool MotionRequestBuilder::fromYAMLString(const std::string &str)
+{
+    incrementVersion();
+
+    bool success = IO::fromYAMLString(request_, str);
     setPlanningGroup(request_.group_name);
     return success;
 }

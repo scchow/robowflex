@@ -1926,5 +1926,21 @@ namespace robowflex
         {
             return IO::YAMLFileToMessage(msg, file);
         }
+
+        bool fromYAMLString(moveit_msgs::PlanningScene &msg, const std::string &str)
+        {
+            return IO::YAMLStringToMessage(msg, str);
+        }
+
+        bool fromYAMLString(moveit_msgs::MotionPlanRequest &msg, const std::string &str)
+        {
+            return IO::YAMLStringToMessage(msg, str);
+        }
+
+        bool fromYAMLString(moveit_msgs::RobotState &msg, const std::string &str)
+        {
+            return IO::YAMLStringToMessage(msg, str);
+        }
+
     }  // namespace IO
 }  // namespace robowflex

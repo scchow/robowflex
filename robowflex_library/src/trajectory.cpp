@@ -61,6 +61,16 @@ bool Trajectory::fromYAMLFile(const robot_state::RobotState &reference_state, co
     return true;
 }
 
+bool Trajectory::fromYAMLString(const robot_state::RobotState &reference_state, const std::string &str)
+{
+    moveit_msgs::RobotTrajectory msg;
+    if (!IO::YAMLStringToMessage(msg, str))
+        return false;
+
+    useMessage(reference_state, msg);
+    return true;
+}
+
 void Trajectory::addSuffixWaypoint(const robot_state::RobotState &state, double dt)
 {
     trajectory_->addSuffixWayPoint(state, dt);

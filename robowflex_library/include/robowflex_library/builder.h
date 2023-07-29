@@ -431,6 +431,12 @@ namespace robowflex
          */
         bool fromYAMLFile(const std::string &file);
 
+        /** \brief Load a planning request from a YAML file \a file.
+         *  \param[in] str The name of the file to load the request from.
+         *  \return True on success, false on failure.
+         */
+        bool fromYAMLString(const std::string &str);
+
         /** \} */
 
     private:

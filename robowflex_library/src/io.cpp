@@ -247,6 +247,19 @@ std::pair<bool, YAML::Node> IO::loadFileToYAML(const std::string &path)
     }
 }
 
+std::pair<bool, YAML::Node> IO::loadStringToYAML(const std::string &str)
+{
+    YAML::Node file;
+    try
+    {
+        return std::make_pair(true, YAML::Load(str));
+    }
+    catch (std::exception &e)
+    {
+        return std::make_pair(false, file);
+    }
+}
+
 std::pair<bool, std::vector<YAML::Node>> IO::loadAllFromFileToYAML(const std::string &path)
 {
     std::vector<YAML::Node> file;
