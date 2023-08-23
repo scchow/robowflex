@@ -24,12 +24,15 @@ class Scene:
         if not self.collection:
             # Create scene
             self.collection = rv.utils.make_collection(name)
+            print(f"Loading scene file: {scene_file} for scene name: {name}")
             self.load_scene(scene_file)
 
         else:
+            print(f"Populating based on existing scene")
             # Populate based on existing scene
             for item in self.collection.objects:
                 self.shapes[item.name] = item
+                print(f"Added scene object: {item.name}")
 
     ## @brief Loads a YAML moveit_msgs::PlanningScene into Blender.
     #
