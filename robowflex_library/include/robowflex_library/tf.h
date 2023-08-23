@@ -197,6 +197,13 @@ namespace robowflex
          */
         Eigen::Quaterniond sampleOrientationUniform(const Eigen::Vector3d &tolerances);
 
+        /** \brief Sample an orientation from a gaussian distribution with mean zero and given standard
+         * deviation.
+         * \param[in] stddev The desired standard deviation for the orientation.
+         * \return The sampled orientation.
+         */
+        Eigen::Quaterniond sampleOrientationGaussian(const Eigen::Vector3d &stddev);
+
         /** \brief Offset an orientation by a rotation about an axis.
          *  \param[in] orientation Orientation to offset.
          *  \param[in] axis Axis to offset orientation about.

@@ -225,6 +225,16 @@ Eigen::Quaterniond TF::sampleOrientationUniform(const Eigen::Vector3d &tolerance
     return sampled;
 }
 
+Eigen::Quaterniond TF::sampleOrientationGaussian(const Eigen::Vector3d &stddev)
+{
+    const auto vec = RNG::gaussianVec(stddev);
+    Eigen::Quaterniond sampled = Eigen::AngleAxisd(vec[0], Eigen::Vector3d::UnitX())    //
+                                 * Eigen::AngleAxisd(vec[1], Eigen::Vector3d::UnitY())  //
+                                 * Eigen::AngleAxisd(vec[2], Eigen::Vector3d::UnitZ());
+
+    return sampled;
+}
+
 Eigen::Quaterniond TF::offsetOrientation(const Eigen::Quaterniond &orientation, const Eigen::Vector3d &axis,
                                          double value)
 {
