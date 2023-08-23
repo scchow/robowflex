@@ -549,11 +549,11 @@ namespace robowflex
              *  \param[in] tolerances Position tolerances on the XYZ axes for the grasp.
              *  \param[in] verbose If true, will give verbose collision checking output.
              */
-            IKQuery(const std::string &group,   //
-                    const RobotPose &offset,    //
-                    const ScenePtr &scene,      //
-                    const std::string &object,  //
-                    const Eigen::Vector3d &tolerances = constants::ik_vec_tolerance,
+            IKQuery(const std::string &group,                                         //
+                    const RobotPose &offset,                                          //
+                    const ScenePtr &scene,                                            //
+                    const std::string &object,                                        //
+                    const Eigen::Vector3d &tolerances = constants::ik_vec_tolerance,  //
                     bool verbose = false);
 
             /** \brief Constructor. Initialize an IK query from MoveIt message constraints.

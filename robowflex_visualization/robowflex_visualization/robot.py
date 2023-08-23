@@ -10,6 +10,9 @@ from urdf_parser_py import urdf as URDF
 
 import robowflex_visualization as rv
 
+# VIRTUAL_JOINT_NAME = "virtual_joint"
+VIRTUAL_JOINT_NAME = "position"
+
 
 ## @brief Controllable URDF described robot.
 #  This class loads a URDF from the package resource URI under a Blender
@@ -36,6 +39,9 @@ class Robot:
     def __init__(self, name, urdf, make_pretty = True):
         self.name = name
 
+        # import pdb
+        # pdb.set_trace()
+        
         self.collection = rv.utils.get_collection(name)
         if not self.collection:
             self.collection = rv.utils.make_collection(name)
@@ -134,6 +140,16 @@ class Robot:
         link_xml = self.get_link_xml(joint_xml.child)
         link = self.get_link(joint_xml.child)
 
+        if link is None:
+            import pdb
+            pdb.set_trace()
+            raise TypeError(f"Could not find link during processing of"
+                            f"\njoint_name: {joint_name}"
+                            f"\nparent_link: {joint_xml.parent}"
+                            f"\nchild_link: {joint_xml.child}"
+                            # "\nRaw robot xml:{self.urdf_xml}"
+                            )
+
         link.rotation_mode = "QUATERNION"
 
         parent_l = mathutils.Matrix.Identity(4)
@@ -181,7 +197,7 @@ class Robot:
     #
     def set_joint_tf(self, joint_name, tf, interpolate = True):
         # Check for "virtual_joint", which isn't in the URDF
-        if joint_name == "virtual_joint":
+        if joint_name == VIRTUAL_JOINT_NAME:
             root = self.get_root().name
             link_xml = self.get_link_xml(root)
             link = self.get_link(root)
@@ -210,7 +226,7 @@ class Robot:
     #  @param frame Frame to add keyframe at.
     #
     def add_keyframe(self, joint_name, frame):
-        if joint_name == "virtual_joint":
+        if joint_name == VIRTUAL_JOINT_NAME:
             root = self.get_root().name
             link_xml = self.get_link_xml(root)
             link = self.get_link(root)
@@ -219,8 +235,9 @@ class Robot:
             link_xml = self.get_link_xml(joint_xml.child)
             link = self.get_link(joint_xml.child)
 
-        link.keyframe_insert(data_path = "location", frame = frame)
-        link.keyframe_insert(data_path = "rotation_quaternion", frame = frame)
+        if link is not None:
+            link.keyframe_insert(data_path = "location", frame = frame)
+            link.keyframe_insert(data_path = "rotation_quaternion", frame = frame)
 
     ## @brief Adds keyframes to animate a moveit_msgs::RobotTrajectoryMsg.
     #

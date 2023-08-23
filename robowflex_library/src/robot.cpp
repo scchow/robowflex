@@ -426,32 +426,36 @@ bool Robot::loadKinematics(const std::string &group_name, bool load_subgroups)
 
 void Robot::setSRDFPostProcessAddPlanarJoint(const std::string &name)
 {
-    setSRDFPostProcessFunction([&, name](tinyxml2::XMLDocument &doc) -> bool {
-        tinyxml2::XMLElement *virtual_joint = doc.NewElement("virtual_joint");
-        virtual_joint->SetAttribute("name", name.c_str());
-        virtual_joint->SetAttribute("type", "planar");
-        virtual_joint->SetAttribute("parent_frame", "world");
-        virtual_joint->SetAttribute("child_link", model_->getRootLink()->getName().c_str());
+    setSRDFPostProcessFunction(
+        [&, name](tinyxml2::XMLDocument &doc) -> bool
+        {
+            tinyxml2::XMLElement *virtual_joint = doc.NewElement("virtual_joint");
+            virtual_joint->SetAttribute("name", name.c_str());
+            virtual_joint->SetAttribute("type", "planar");
+            virtual_joint->SetAttribute("parent_frame", "world");
+            virtual_joint->SetAttribute("child_link", model_->getRootLink()->getName().c_str());
 
-        doc.FirstChildElement("robot")->InsertFirstChild(virtual_joint);
+            doc.FirstChildElement("robot")->InsertFirstChild(virtual_joint);
 
-        return true;
-    });
+            return true;
+        });
 }
 
 void Robot::setSRDFPostProcessAddFloatingJoint(const std::string &name)
 {
-    setSRDFPostProcessFunction([&, name](tinyxml2::XMLDocument &doc) -> bool {
-        tinyxml2::XMLElement *virtual_joint = doc.NewElement("virtual_joint");
-        virtual_joint->SetAttribute("name", name.c_str());
-        virtual_joint->SetAttribute("type", "floating");
-        virtual_joint->SetAttribute("parent_frame", "world");
-        virtual_joint->SetAttribute("child_link", model_->getRootLink()->getName().c_str());
+    setSRDFPostProcessFunction(
+        [&, name](tinyxml2::XMLDocument &doc) -> bool
+        {
+            tinyxml2::XMLElement *virtual_joint = doc.NewElement("virtual_joint");
+            virtual_joint->SetAttribute("name", name.c_str());
+            virtual_joint->SetAttribute("type", "floating");
+            virtual_joint->SetAttribute("parent_frame", "world");
+            virtual_joint->SetAttribute("child_link", model_->getRootLink()->getName().c_str());
 
-        doc.FirstChildElement("robot")->InsertFirstChild(virtual_joint);
+            doc.FirstChildElement("robot")->InsertFirstChild(virtual_joint);
 
-        return true;
-    });
+            return true;
+        });
 }
 
 void Robot::setSRDFPostProcessAddGroup(const std::string &name,
@@ -713,11 +717,11 @@ Robot::IKQuery::IKQuery(const std::string &group, const std::string &tip,
 {
 }
 
-Robot::IKQuery::IKQuery(const std::string &group,   //
-                        const RobotPose &offset,    //
-                        const ScenePtr &scene,      //
-                        const std::string &object,  //
-                        const Eigen::Vector3d &tolerances,
+Robot::IKQuery::IKQuery(const std::string &group,           //
+                        const RobotPose &offset,            //
+                        const ScenePtr &scene,              //
+                        const std::string &object,          //
+                        const Eigen::Vector3d &tolerances,  //
                         bool verbose)
   : group(group), scene(scene), verbose(verbose)
 {
@@ -843,34 +847,37 @@ void Robot::IKQuery::addMetric(const Metric &metric_function)
 void Robot::IKQuery::addDistanceMetric(double weight)
 {
     addMetric([weight](const robot_state::RobotState &state, const SceneConstPtr &scene,
-                       const kinematic_constraints::ConstraintEvaluationResult &result) {
-        return weight * result.distance;
-    });
+                       const kinematic_constraints::ConstraintEvaluationResult &result)
+              { return weight * result.distance; });
 }
 
 void Robot::IKQuery::addCenteringMetric(double weight)
 {
-    addMetric([&, weight](const robot_state::RobotState &state, const SceneConstPtr &scene,
-                          const kinematic_constraints::ConstraintEvaluationResult &result) {
-        const auto &jmg = state.getJointModelGroup(group);
-        const auto &min = state.getMinDistanceToPositionBounds(jmg);
-        double extent = min.second->getMaximumExtent() / 2.;
-        return weight * (extent - min.first) / extent;
-    });
+    addMetric(
+        [&, weight](const robot_state::RobotState &state, const SceneConstPtr &scene,
+                    const kinematic_constraints::ConstraintEvaluationResult &result)
+        {
+            const auto &jmg = state.getJointModelGroup(group);
+            const auto &min = state.getMinDistanceToPositionBounds(jmg);
+            double extent = min.second->getMaximumExtent() / 2.;
+            return weight * (extent - min.first) / extent;
+        });
 }
 
 void Robot::IKQuery::addClearanceMetric(double weight)
 {
-    addMetric([&, weight](const robot_state::RobotState &state, const SceneConstPtr &scene,
-                          const kinematic_constraints::ConstraintEvaluationResult &result) {
-        if (scene)
+    addMetric(
+        [&, weight](const robot_state::RobotState &state, const SceneConstPtr &scene,
+                    const kinematic_constraints::ConstraintEvaluationResult &result)
         {
-            double v = scene->distanceToCollision(state);
-            return weight * v;
-        }
+            if (scene)
+            {
+                double v = scene->distanceToCollision(state);
+                return weight * v;
+            }
 
-        return 0.;
-    });
+            return 0.;
+        });
 }
 
 bool Robot::IKQuery::sampleRegion(RobotPose &pose, std::size_t index) const
@@ -959,6 +966,19 @@ bool Robot::setFromIK(const IKQuery &query, robot_state::RobotState &state) cons
     const auto &gsvcf = (query_copy.scene) ? query_copy.scene->getGSVCF(query_copy.verbose) :
                                              moveit::core::GroupStateValidityCallbackFn{};
 
+    if (query_copy.verbose)
+    {
+        if (query_copy.scene != nullptr)
+        {
+            RBX_INFO("robowflex_library/robot.cpp: Using scene's collision checking in IK");
+        }
+        else
+        {
+            RBX_INFO("robowflex_library/robot.cpp: Using moveit core groupstatevalidity collision checking "
+                     "in IK");
+        }
+    }
+
     bool evaluate = not query_copy.metrics.empty() or query_copy.validate;
     kinematic_constraints::ConstraintEvaluationResult result;
 
@@ -1028,15 +1048,29 @@ bool Robot::setFromIK(const IKQuery &query, robot_state::RobotState &state) cons
         }
 
         if (query_copy.random_restart and not success)
+        {
+            if (query_copy.verbose)
+            {
+                RBX_INFO("Resetting to random positions and restarting IK...");
+            }
             state.setToRandomPositions(jmg);
+        }
     }
 
     // If evaluating metric, copy best state.
     if (std::isfinite(best_value))
     {
         state = *best;
-        success = true;
+        success = true;  // success was actually true, we just set it to false for our loop to continue
+        if (query_copy.verbose)
+        {
+            RBX_INFO("Evaluating best state found so far with value %f", best_value);
+        }
     }
+
+    // if (success and query_copy.verbose){
+    //     RBX_INFO("Found new state: ")
+    // }
 
     state.update();
     return success;
