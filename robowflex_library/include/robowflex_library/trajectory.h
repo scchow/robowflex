@@ -161,6 +161,21 @@ namespace robowflex
          */
         void interpolate(unsigned int count);
 
+        /** \brief Insert a number of states in a path so that no two sequential states along the path have a
+         * difference of greater than max_deltas along each dimension of the state space
+         *
+         * \param[in] max_deltas a vector where each entry denotes the maximum amount of change allowed in
+         * each dimension of the state space
+         */
+        void interpolate(const std::vector<double> &max_deltas);
+
+        /** \brief Insert a number of states in a path so that no two sequential states along the path have a
+         * difference of greater than max_deltas along each dimension of the state space
+         *
+         * \param[in] map of variable name to maximum amount of change allowed in that variable between states
+         */
+        void interpolate(const std::map<std::string, double> &max_deltas);
+
         /** \brief Converts a trajectory into a vector of position vectors. The values are in the same order
          * as reported by getJointNames(), which is consistent within MoveIt.
          * \return The trajectory in vector form.

@@ -164,6 +164,129 @@ void Trajectory::interpolate(unsigned int count)
     throw Exception(1, "Not Implemented");
 }
 
+void Trajectory::interpolate(const std::vector<double> &max_deltas)
+{
+#if ROBOWFLEX_AT_LEAST_KINETIC
+    // Cannot interpolate if there are less than 2 points
+    if (trajectory_->getWayPointCount() < 2)
+        return;
+
+    // the Number of segments that exist in this path.
+    const int n1 = getNumWaypoints() - 1;
+    int added = 0;
+
+    assert(max_deltas.size() == trajectory_->getWaypointPtr(0)->getVariableCount());
+
+    for (int seg = 0; seg < n1; ++seg)
+    {
+        // Last waypoint that has not been interpolated.
+        int i = seg + added;
+        auto s0 = trajectory_->getWayPointPtr(i);      // First point of the (uninterpolated) segment
+        auto s2 = trajectory_->getWayPointPtr(i + 1);  // Last point of the (uninterpolated) segment
+
+        // compute an approximate number of states the following segment needs to contain; this includes
+        // endpoints
+        double *state0 = s0->getVariablePositions();
+        double *state2 = s2->getVariablePositions();
+        int ns = 1;        // number of points needed to represent this segment
+        int num_segments;  // placeholder for number of segments needed to represent current segment
+        for (size_t i = 0; i < s0->getVariableCount(); ++i)
+        {
+            // number of segments we need to divide current segment into to ensure
+            // change in joint i does not exceed max_deltas[i]
+            num_segments = static_cast<int>(std::ceil(std::abs(state2[i] - state0[i]) / max_deltas[i]));
+
+            // number of points needed overall is the larger of the current number of points needed and
+            // the number of points needed so that no segment has larger diff than max_deltas[i]
+            ns = std::max(ns, num_segments + 1);
+        }
+
+        // if more than endpoints are needed
+        if (ns > 2)
+        {
+            ns -= 2;  // subtract endpoints
+
+            // compute intermediate states
+            for (int j = 1; j < ns; j++)
+            {
+                // The state to be inserted
+                auto s1 = std::make_shared<robot_state::RobotState>(trajectory_->getRobotModel());
+                double dt = double(j) / double(ns);
+
+                s0->interpolate(*s2, dt, *s1);
+                s1->update(true);
+                trajectory_->insertWayPoint(i + j, *s1, dt);
+                // count how many stated have been added
+                added++;
+            }
+        }
+    }
+    RBX_INFO("Added %d extra states in the trajectory", added);
+    return;
+#endif
+    throw Exception(1, "Not Implemented");
+}
+
+void Trajectory::interpolate(const std::map<std::string, double> &max_deltas)
+{
+#if ROBOWFLEX_AT_LEAST_KINETIC
+    // Cannot interpolate if there are less than 2 points
+    if (trajectory_->getWayPointCount() < 2)
+        return;
+
+    // the number of segments that exist in this path.
+    const int n1 = getNumWaypoints() - 1;
+    int added = 0;
+
+    for (int seg = 0; seg < n1; ++seg)
+    {
+        // Last waypoint that has not been interpolated.
+        int i = seg + added;
+        auto s0 = trajectory_->getWayPointPtr(i);      // First point of the (uninterpolated) segment
+        auto s2 = trajectory_->getWayPointPtr(i + 1);  // Last point of the (uninterpolated) segment
+        // compute an approximate number of states the following segment needs to contain; this includes
+        // endpoints
+        int ns = 1;        // number of points needed to represent this segment
+        int num_segments;  // placeholder for number of segments needed to represent current segment
+        for (const auto &max_d : max_deltas)
+        {
+            // number of segments we need to divide current segment into to ensure
+            // change in joint i does not exceed max_deltas[i]
+            double s0_joint = s0->getVariablePosition(max_d.first);
+            double s2_joint = s2->getVariablePosition(max_d.first);
+            num_segments = static_cast<int>(std::ceil(std::abs(s2_joint - s0_joint) / max_d.second));
+
+            // number of points needed overall is the larger of the current number of points needed and
+            // the number of points needed so that no segment has larger diff than max_deltas[i]
+            ns = std::max(ns, num_segments + 1);
+        }
+
+        // if more than endpoints are needed
+        if (ns > 2)
+        {
+            ns -= 2;  // subtract endpoints
+
+            // compute intermediate states
+            for (int j = 1; j < ns; j++)
+            {
+                // The state to be inserted
+                auto s1 = std::make_shared<robot_state::RobotState>(trajectory_->getRobotModel());
+                double dt = double(j) / double(ns);
+
+                s0->interpolate(*s2, dt, *s1);
+                s1->update(true);
+                trajectory_->insertWayPoint(i + j, *s1, dt);
+                // count how many stated have been added
+                added++;
+            }
+        }
+    }
+    RBX_INFO("Added %d extra states in the trajectory", added);
+    return;
+#endif
+    throw Exception(1, "Not Implemented");
+}
+
 std::vector<std::vector<double>> Trajectory::vectorize() const
 {
     std::vector<std::vector<double>> traj_vec;
