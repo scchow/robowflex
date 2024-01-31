@@ -6,6 +6,7 @@
 #include <moveit/robot_state/conversions.h>
 #include <moveit/robot_state/robot_state.h>
 
+#include <moveit_msgs/RobotState.h>
 #include <robowflex_library/geometry.h>
 #include <robowflex_library/io.h>
 #include <robowflex_library/io/yaml.h>
@@ -163,6 +164,9 @@ bool Robot::initializeFromYAML(const std::string &config_file)
         if (IO::isNode(node["robot_state"]))
         {
             const auto &robot_state = IO::robotStateFromNode(node["robot_state"]);
+            default_state_msg_ = std::make_shared<moveit_msgs::RobotState>(IO::robotStateFromNode(node["robot"
+                                                                                                       "_stat"
+                                                                                                       "e"]));
             setState(robot_state);
         }
         else
@@ -426,59 +430,53 @@ bool Robot::loadKinematics(const std::string &group_name, bool load_subgroups)
 
 void Robot::setSRDFPostProcessAddPlanarJoint(const std::string &name)
 {
-    setSRDFPostProcessFunction(
-        [&, name](tinyxml2::XMLDocument &doc) -> bool
-        {
-            tinyxml2::XMLElement *virtual_joint = doc.NewElement("virtual_joint");
-            virtual_joint->SetAttribute("name", name.c_str());
-            virtual_joint->SetAttribute("type", "planar");
-            virtual_joint->SetAttribute("parent_frame", "world");
-            virtual_joint->SetAttribute("child_link", model_->getRootLink()->getName().c_str());
+    setSRDFPostProcessFunction([&, name](tinyxml2::XMLDocument &doc) -> bool {
+        tinyxml2::XMLElement *virtual_joint = doc.NewElement("virtual_joint");
+        virtual_joint->SetAttribute("name", name.c_str());
+        virtual_joint->SetAttribute("type", "planar");
+        virtual_joint->SetAttribute("parent_frame", "world");
+        virtual_joint->SetAttribute("child_link", model_->getRootLink()->getName().c_str());
 
-            doc.FirstChildElement("robot")->InsertFirstChild(virtual_joint);
+        doc.FirstChildElement("robot")->InsertFirstChild(virtual_joint);
 
-            return true;
-        });
+        return true;
+    });
 }
 
 void Robot::setSRDFPostProcessAddFloatingJoint(const std::string &name)
 {
-    setSRDFPostProcessFunction(
-        [&, name](tinyxml2::XMLDocument &doc) -> bool
-        {
-            tinyxml2::XMLElement *virtual_joint = doc.NewElement("virtual_joint");
-            virtual_joint->SetAttribute("name", name.c_str());
-            virtual_joint->SetAttribute("type", "floating");
-            virtual_joint->SetAttribute("parent_frame", "world");
-            virtual_joint->SetAttribute("child_link", model_->getRootLink()->getName().c_str());
+    setSRDFPostProcessFunction([&, name](tinyxml2::XMLDocument &doc) -> bool {
+        tinyxml2::XMLElement *virtual_joint = doc.NewElement("virtual_joint");
+        virtual_joint->SetAttribute("name", name.c_str());
+        virtual_joint->SetAttribute("type", "floating");
+        virtual_joint->SetAttribute("parent_frame", "world");
+        virtual_joint->SetAttribute("child_link", model_->getRootLink()->getName().c_str());
 
-            doc.FirstChildElement("robot")->InsertFirstChild(virtual_joint);
+        doc.FirstChildElement("robot")->InsertFirstChild(virtual_joint);
 
-            return true;
-        });
+        return true;
+    });
 }
 
 void Robot::setSRDFPostProcessAddGroup(const std::string &name,
                                        const std::vector<std::pair<std::string, std::string>> &members)
 {
-    setSRDFPostProcessFunction(
-        [&, name, members](tinyxml2::XMLDocument &doc) -> bool
+    setSRDFPostProcessFunction([&, name, members](tinyxml2::XMLDocument &doc) -> bool {
+        tinyxml2::XMLElement *group_element = doc.NewElement("group");
+        group_element->SetAttribute("name", name.c_str());
+
+        for (const auto &member : members)
         {
-            tinyxml2::XMLElement *group_element = doc.NewElement("group");
-            group_element->SetAttribute("name", name.c_str());
+            tinyxml2::XMLElement *member_element = doc.NewElement(member.first.c_str());
+            member_element->SetAttribute("name", member.second.c_str());
 
-            for (const auto &member : members)
-            {
-                tinyxml2::XMLElement *member_element = doc.NewElement(member.first.c_str());
-                member_element->SetAttribute("name", member.second.c_str());
+            group_element->InsertFirstChild(member_element);
+        }
 
-                group_element->InsertFirstChild(member_element);
-            }
+        doc.FirstChildElement("robot")->InsertFirstChild(group_element);
 
-            doc.FirstChildElement("robot")->InsertFirstChild(group_element);
-
-            return true;
-        });
+        return true;
+    });
 }
 
 void Robot::setSRDFPostProcessAddMobileManipulatorGroup(const std::string &base_group,
@@ -486,8 +484,7 @@ void Robot::setSRDFPostProcessAddMobileManipulatorGroup(const std::string &base_
                                                         const std::string &base_manip_group)
 {
     setSRDFPostProcessFunction(
-        [&, base_group, manip_group, base_manip_group](tinyxml2::XMLDocument &doc) -> bool
-        {
+        [&, base_group, manip_group, base_manip_group](tinyxml2::XMLDocument &doc) -> bool {
             // Add mobile base joint.
             const std::string &base_joint_name = "base_joint";
             tinyxml2::XMLElement *virtual_joint = doc.NewElement("virtual_joint");
@@ -524,8 +521,7 @@ void Robot::setKinematicsPostProcessAddBaseManipulatorPlugin(const std::string &
                                                              double search_resolution, double timeout)
 {
     setKinematicsPostProcessFunction(
-        [&, base_manip_group, search_resolution, timeout](YAML::Node &node) -> bool
-        {
+        [&, base_manip_group, search_resolution, timeout](YAML::Node &node) -> bool {
             YAML::Node ks_node;
             ks_node["kinematics_solver"] = "base_manipulator_kinematics_plugin/"
                                            "BaseManipulatorKinematicsPlugin";
@@ -643,6 +639,18 @@ void Robot::setStateFromYAMLFile(const std::string &file)
     IO::fromYAMLFile(state, file);
 
     setState(state);
+}
+
+robot_model::RobotStatePtr Robot::getDefaultState()
+{
+    if (default_state_msg_)
+    {
+        auto state = allocState();
+        moveit::core::robotStateMsgToRobotState(*default_state_msg_, *state);
+        return state;
+    }
+
+    return allocState();
 }
 
 void Robot::setGroupState(const std::string &name, const std::vector<double> &positions)
@@ -847,37 +855,34 @@ void Robot::IKQuery::addMetric(const Metric &metric_function)
 void Robot::IKQuery::addDistanceMetric(double weight)
 {
     addMetric([weight](const robot_state::RobotState &state, const SceneConstPtr &scene,
-                       const kinematic_constraints::ConstraintEvaluationResult &result)
-              { return weight * result.distance; });
+                       const kinematic_constraints::ConstraintEvaluationResult &result) {
+        return weight * result.distance;
+    });
 }
 
 void Robot::IKQuery::addCenteringMetric(double weight)
 {
-    addMetric(
-        [&, weight](const robot_state::RobotState &state, const SceneConstPtr &scene,
-                    const kinematic_constraints::ConstraintEvaluationResult &result)
-        {
-            const auto &jmg = state.getJointModelGroup(group);
-            const auto &min = state.getMinDistanceToPositionBounds(jmg);
-            double extent = min.second->getMaximumExtent() / 2.;
-            return weight * (extent - min.first) / extent;
-        });
+    addMetric([&, weight](const robot_state::RobotState &state, const SceneConstPtr &scene,
+                          const kinematic_constraints::ConstraintEvaluationResult &result) {
+        const auto &jmg = state.getJointModelGroup(group);
+        const auto &min = state.getMinDistanceToPositionBounds(jmg);
+        double extent = min.second->getMaximumExtent() / 2.;
+        return weight * (extent - min.first) / extent;
+    });
 }
 
 void Robot::IKQuery::addClearanceMetric(double weight)
 {
-    addMetric(
-        [&, weight](const robot_state::RobotState &state, const SceneConstPtr &scene,
-                    const kinematic_constraints::ConstraintEvaluationResult &result)
+    addMetric([&, weight](const robot_state::RobotState &state, const SceneConstPtr &scene,
+                          const kinematic_constraints::ConstraintEvaluationResult &result) {
+        if (scene)
         {
-            if (scene)
-            {
-                double v = scene->distanceToCollision(state);
-                return weight * v;
-            }
+            double v = scene->distanceToCollision(state);
+            return weight * v;
+        }
 
-            return 0.;
-        });
+        return 0.;
+    });
 }
 
 bool Robot::IKQuery::sampleRegion(RobotPose &pose, std::size_t index) const

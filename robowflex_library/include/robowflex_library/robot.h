@@ -338,6 +338,11 @@ namespace robowflex
          */
         void setStateFromYAMLFile(const std::string &file);
 
+        /** \brief Gets a copy of the robot states with joints set to the default states
+         *  from file if it exists.
+         */
+        robot_model::RobotStatePtr getDefaultState();
+
         /** \brief Sets the group of the scratch state to a vector of joint positions.
          *  \param[in] name Name of group to set.
          *  \param[in] positions Positions to set.
@@ -833,7 +838,9 @@ namespace robowflex
         std::map<std::string, robot_model::SolverAllocatorFn> imap_;      ///< Kinematic solver allocator map.
         kinematics_plugin_loader::KinematicsPluginLoaderPtr kinematics_;  ///< Kinematic plugin loader.
 
-        robot_state::RobotStatePtr scratch_;  ///< Scratch robot state.
+        robot_state::RobotStatePtr scratch_;                          ///< Scratch robot state.
+        std::shared_ptr<moveit_msgs::RobotState> default_state_msg_;  ///< Default robot state message from
+                                                                      ///< file
     };
 
     /** \cond IGNORE */
