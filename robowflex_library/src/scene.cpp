@@ -330,6 +330,37 @@ bool Scene::moveObjectLocal(const std::string &name, const RobotPose &transform)
     return success;
 }
 
+bool Scene::setObjectPose(const std::string &name, const RobotPose &transform)
+{
+    incrementVersion();
+
+    bool success = false;
+#if ROBOWFLEX_AT_LEAST_KINETIC
+#if ROBOWFLEX_MOVEIT_VERSION >= ROBOWFLEX_MOVEIT_VERSION_COMPUTE(1, 1, 6)
+    // if we are using moveit 1.1.6 or later
+    // the Scene::getObjectPose() returns the object pose right multiplied by the object's shape pose
+    // So if we are trying to do the reverse operation by setting the object pose,
+    // then to get the object pose,
+    // we need to right multiply the transform by the inverse of object's shape pose
+    // to get the transform to assign to obj->pose_
+    const auto &world = scene_->getWorldNonConst();
+    const auto &obj = world->getObject(name);
+    if (obj)
+    {
+        success = world->setObjectPose(name, transform * obj->shape_poses_[0].inverse());
+    }
+#else
+    const auto &world = scene_->getWorldNonConst();
+    success = world->setObjectPose(name, transform);
+#endif
+
+#endif
+    if (not success)
+        RBX_ERROR("Failed to move object %s", name);
+
+    return success;
+}
+
 RobotPose Scene::getFramePose(const std::string &id) const
 {
     if (not scene_->knowsFrameTransform(id))

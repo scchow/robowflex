@@ -214,6 +214,10 @@ namespace robowflex
             SMOOTHNESS = 1 << 4,  ///< Smoothness of path.
         };
 
+        /** \cond IGNORE */
+        ROBOWFLEX_CLASS_FORWARD(Options);
+        /** \endcond */
+
         /** \brief Options for profiling.
          */
         struct Options
@@ -535,6 +539,12 @@ namespace robowflex
          *  \param[in] results Results to dump to file.
          */
         void dump(const PlanDataSet &results) override;
+
+        /** \brief Dumps \a results into a string.
+         *  \param[in] results Results to dump to string.
+         *  \return The results as a string.
+         */
+        std::string dumpString(const PlanDataSet &results);
 
     private:
         bool is_init_{false};     ///< Have we initialized the outputter (on first result)?

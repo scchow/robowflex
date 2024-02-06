@@ -189,6 +189,16 @@ namespace robowflex
          */
         bool moveObjectLocal(const std::string &name, const RobotPose &transform);
 
+        /**
+         * @brief Set the Object Pose object
+         *
+         * @param name Name of the object to set.
+         * @param transform The transform of the object.
+         * @return true
+         * @return false
+         */
+        bool setObjectPose(const std::string &name, const RobotPose &transform);
+
         /** \brief Get the pose of a particular frame in the scene.
          *  Example, use this to get the pose from /world to /base_link.
          *  \param[in] id The ID of the frame to look for.

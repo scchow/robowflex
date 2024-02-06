@@ -578,6 +578,39 @@ void JSONPlanDataSetOutputter::dump(const PlanDataSet &results)
     outfile_ << "]";
 }
 
+std::string JSONPlanDataSetOutputter::dumpString(const PlanDataSet &results)
+{
+    std::stringstream ss;
+    ss << "{";
+
+    ss << "\"" << results.name << "\":[";
+
+    const auto &data = results.getFlatData();
+
+    for (size_t i = 0; i < data.size(); i++)
+    {
+        const auto &run = data[i];
+        ss << "{";
+
+        ss << "\"name\": \"run_" << run->query.name << "\",";
+        ss << "\"time\":" << run->time << ",";
+        ss << "\"success\":" << run->success;
+
+        for (const auto &metric : run->metrics)
+            ss << ",\"" << metric.first << "\":" << toMetricString(metric.second);
+
+        ss << "}";
+
+        // Write the command between each run.
+        if (i != data.size() - 1)
+            ss << "," << std::endl;
+    }
+
+    ss << "]";
+
+    return ss.str();
+}
+
 ///
 /// TrajectoryPlanDataSetOutputter
 ///

@@ -175,7 +175,7 @@ void Trajectory::interpolate(const std::vector<double> &max_deltas)
     const int n1 = getNumWaypoints() - 1;
     int added = 0;
 
-    assert(max_deltas.size() == trajectory_->getWaypointPtr(0)->getVariableCount());
+    assert(max_deltas.size() == trajectory_->getWayPointPtr(0)->getVariableCount());
 
     for (int seg = 0; seg < n1; ++seg)
     {
