@@ -575,7 +575,7 @@ void JSONPlanDataSetOutputter::dump(const PlanDataSet &results)
             outfile_ << "," << std::endl;
     }
 
-    outfile_ << "]";
+    outfile_ << "]}";
 }
 
 std::string JSONPlanDataSetOutputter::dumpString(const PlanDataSet &results)
